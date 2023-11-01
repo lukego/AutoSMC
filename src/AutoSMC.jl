@@ -12,7 +12,7 @@ module AutoSMC
 using DocStringExtensions
 
 # Main modules.
-include("Model.jl")
+include("Models.jl")
 
 # Top-level API.
 include("api.jl")
