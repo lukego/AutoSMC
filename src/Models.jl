@@ -3,9 +3,12 @@ module Models
 using Gen
 using GenParticleFilters
 using MacroTools
+using DataFrames
 
-Config = @NamedTuple{response_vars::Vector{Symbol},
-                     fixed_vars::Vector{Symbol}}
+Config = @NamedTuple begin
+    response_vars::Vector{Symbol};
+    fixed_vars::Vector{Symbol};
+end
 
 Simulation = @NamedTuple{pf_state::ParticleFilterState,
                        config::Config}
@@ -16,13 +19,14 @@ function ismodel(expr)
     @capture(expr, response_ ~ distribution_(parameters__))
 end
 
-@gen function model(config, observations)
+@gen function model(config::Config, data::DataFrame)
     response ~ oneof(config.response_vars)
-    #distribution ~ distributions
-    μ ~ oneof(config.fixed_vars)
-    σ ~ oneof(config.fixed_vars)
-    for (i,x) in enumerate(observations)
-        {:y=>i} ~ normal(μ, σ)
+    explain ~ oneof(config.fixed_vars)
+    σ ~ exponential(1/1000)
+    r = data[!,response]
+    e = data[!,explain]
+    for i in eachindex(r, e)
+        {:y=>i} ~ normal(r[i], σ)
     end
 end
 
